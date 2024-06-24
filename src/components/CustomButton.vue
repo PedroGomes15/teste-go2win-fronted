@@ -45,6 +45,7 @@ export default {
   margin-bottom: 20px;
   border-radius: 5px;
   font-size: 15px;
+  max-width: 450px;
 }
 
 .custom-button:hover {

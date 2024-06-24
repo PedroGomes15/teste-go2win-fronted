@@ -1,7 +1,7 @@
 <template>
   <div class="create-transaction-container">
     <h2>Criar Nova Transferência</h2>
-    <form @submit.prevent="criarTransferencia">
+    <form @submit.prevent="handleCreateTransaction">
       <div class="form-group">
         <label for="origin">Conta de Origem</label>
         <input type="text" id="origin" v-model="newTransaction.origin" required />
@@ -12,15 +12,39 @@
       </div>
       <div class="form-group">
         <label for="amount">Valor</label>
-        <input type="number" id="amount" v-model="newTransaction.amount" required />
+        <CurrencyInput
+          id="amount"
+          v-model="newTransaction.amount"
+          :options="{
+            locale: 'pt-BR',
+            currency: 'BRL',
+            currencyDisplay: 'symbol',
+            precision: 2,
+            hideCurrencySymbolOnFocus: false,
+            hideGroupingSeparatorOnFocus: false,
+            hideNegligibleDecimalDigitsOnFocus: false,
+            autoDecimalDigits: true,
+            useGrouping: true,
+            accountingSign: false
+          }"
+          required
+        />
       </div>
       <div class="form-group">
-        <label for="transactionDate">Transaction Date</label>
-        <input type="date" id="transactionDate" v-model="newTransaction.transactionDate" required />
+        <label for="transactionDate">Data do Agendamento</label>
+        <input
+          type="date"
+          id="transactionDate"
+          v-model="newTransaction.transactionDate"
+          @input="handleDateChange"
+          required
+        />
       </div>
-      <CustomButton @click="handleCreateTransaction" type="submit" :disabled="!formPreenchido"
-        >Criar Transferência</CustomButton
-      >
+      <div v-if="currentTax" class="tax-container">
+        <p>Taxa da transação: {{ currentTax.tax }}%</p>
+        <p v-if="currentTax.money > 0">Taxa fixa: {{ formatCurrency(currentTax.money) }}</p>
+      </div>
+      <CustomButton type="submit" :disabled="!isFormFilled">Criar Transferência</CustomButton>
     </form>
     <router-link to="/">
       <button class="btn-voltar">Voltar</button>
@@ -30,10 +54,14 @@
 
 <script>
 import CustomButton from '@/components/CustomButton.vue'
+import CurrencyInput from '@/components/CurrencyInput.vue'
+import { listTaxFromDate, createTransaction } from '@/services/api'
+import { formatCurrency } from '@/util/utils'
 
 export default {
   components: {
-    CustomButton
+    CustomButton,
+    CurrencyInput
   },
   data() {
     return {
@@ -41,35 +69,54 @@ export default {
         origin: '',
         destination: '',
         amount: null,
-        taxAmount: null,
         transactionDate: ''
+      },
+      currentTax: null,
+      currencySettings: {
+        locale: 'pt-BR',
+        prefix: 'R$ ',
+        autoDecimalMode: true
       }
     }
   },
   computed: {
-    formFilled() {
+    isFormFilled() {
       return (
         this.newTransaction.origin !== '' &&
         this.newTransaction.destination !== '' &&
         this.newTransaction.amount !== null &&
-        this.newTransaction.taxAmount !== null &&
         this.newTransaction.transactionDate !== ''
       )
     }
   },
   methods: {
-    handleCreateTransaction() {
-      // Simulated logic to send the new transaction to the backend
-      console.log('New Transaction:', this.newTransaction)
-      this.$router.push('/')
-    }
+    async handleCreateTransaction() {
+      const transaction = await createTransaction(this.newTransaction)
+      if (transaction.id != null) {
+        this.$router.push('/')
+      } else {
+        console.error('Transaction ', transaction)
+      }
+    },
+    async handleDateChange() {
+      const tax = await listTaxFromDate(this.newTransaction.transactionDate)
+      if (tax.status && tax.status === 500) {
+        alert(`Erro ao buscar taxa \n${tax.message}`)
+        this.currentTax = null
+        this.newTransaction.transactionDate = null
+      } else {
+        this.currentTax = tax
+      }
+    },
+    formatCurrency
   }
 }
 </script>
 
 <style scoped>
 .create-transaction-container {
-  max-width: 600px;
+  min-width: 400px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 20px;
   background-color: #f9f9f9;
@@ -97,6 +144,21 @@ h2 {
   padding: 10px;
   border: 1px solid var(--color-border);
   border-radius: 4px;
+}
+
+.tax-container {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  gap: 5px;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 3px -1px var(--vt-c-black-soft);
+
+  p {
+    font-style: italic;
+    font-size: 14px;
+  }
 }
 
 .btn-voltar {

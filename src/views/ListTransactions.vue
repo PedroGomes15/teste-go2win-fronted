@@ -1,44 +1,57 @@
 <template>
-  <div class="transaction-container">
-    <h2>Listagem de Transferências</h2>
-    <table class="transaction-table">
-      <thead v-if="isLargeScreen">
-        <tr>
-          <th>ID</th>
-          <th>Valor</th>
-          <th>Taxa</th>
-          <th>Origem</th>
-          <th>Destino</th>
-          <th>Agendamento</th>
-          <th>Data de Criação</th>
-        </tr>
-      </thead>
-      <tbody v-if="isLargeScreen">
-        <tr v-for="transferencia in transferencias" :key="transferencia.id">
-          <td>{{ transferencia.id }}</td>
-          <td>{{ formatCurrency(transferencia.amount) }}</td>
-          <td>{{ formatCurrency(transferencia.taxAmount) }}</td>
-          <td>{{ transferencia.fromAccount }}</td>
-          <td>{{ transferencia.destinyAccount }}</td>
-          <td>{{ transferencia.transferDate }}</td>
-          <td>{{ transferencia.createdAt }}</td>
-        </tr>
-      </tbody>
-      <tbody v-if="!isLargeScreen">
-        <tr v-for="transferencia in transferencias" :key="transferencia.id">
-          <td>
-            {{ transferencia.destinyAccount }} ({{ transferencia.createdAt }})<br />
-            <span class="transaction-id">{{ transferencia.id }}</span>
-          </td>
-          <td class="td-transaction-value">
-            {{ formatCurrency(transferencia.amount) }} <br />
-            <span class="transaction-tax-amount">{{
-              formatCurrency(transferencia.taxAmount)
-            }}</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="main-container">
+    <div class="transaction-container" v-if="transactions.length > 0">
+      <h2>Listagem de Transferências</h2>
+      <table class="transaction-table" v-if="isLargeScreen">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Valor</th>
+            <th>Taxa</th>
+            <th>Origem</th>
+            <th>Destino</th>
+            <th>Agendamento</th>
+            <th>Data de Criação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="transaction in transactions" :key="transaction.id">
+            <td>{{ transaction.id }}</td>
+            <td>{{ formatCurrency(transaction.amount) }}</td>
+            <td>{{ formatCurrency(transaction.taxAmount) }}</td>
+            <td>{{ transaction.fromAccount }}</td>
+            <td>{{ transaction.destinyAccount }}</td>
+            <td>{{ formatDate(transaction.transferDate) }}</td>
+            <td>{{ formatDate(transaction.createdAt) }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <table class="transaction-table" v-if="!isLargeScreen">
+        <thead>
+          <tr>
+            <th>Destino (Data de Criação)<br /><span class="transaction-id">ID</span></th>
+            <th class="td-transaction-value">
+              Valor<br /><span class="transaction-tax-amount">Taxa</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody v-if="!isLargeScreen">
+          <tr v-for="transaction in transactions" :key="transaction.id">
+            <td>
+              {{ transaction.destinyAccount }} ({{ formatDate(transaction.createdAt) }})<br />
+              <span class="transaction-id">{{ transaction.id }}</span>
+            </td>
+            <td class="td-transaction-value">
+              {{ formatCurrency(transaction.amount) }} <br />
+              <span class="transaction-tax-amount">{{
+                formatCurrency(transaction.taxAmount)
+              }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div v-else>Nenhuma transferencia foi criada ainda</div>
     <router-link to="/transaction">
       <CustomButton>Criar Nova Transferência</CustomButton>
     </router-link>
@@ -47,6 +60,8 @@
 
 <script>
 import CustomButton from '@/components/CustomButton.vue'
+import { formatCurrency, formatDate } from '@/util/utils'
+import { listTransfers } from '@/services/api'
 
 export default {
   components: {
@@ -54,7 +69,7 @@ export default {
   },
   data() {
     return {
-      transferencias: [],
+      transactions: [],
       windowWidth: window.innerWidth
     }
   },
@@ -64,27 +79,7 @@ export default {
     }
   },
   created() {
-    // Exemplo de dados de transferências (simulado)
-    this.transferencias = [
-      {
-        id: 'eb5af113-5c5f-4ee0-8fca-24953cab6ca6',
-        createdAt: '2024-06-22',
-        fromAccount: '123123123',
-        destinyAccount: '123123123',
-        amount: 100.0,
-        taxAmount: 6.8999996,
-        transferDate: '2024-07-15'
-      },
-      {
-        id: 'eb5af113-5c5f-4ee0-8fca-24953cab6ca6',
-        createdAt: '2024-06-22',
-        fromAccount: '123123123',
-        destinyAccount: '123123123',
-        amount: 100.0,
-        taxAmount: 6.8999996,
-        transferDate: '2024-07-15'
-      }
-    ]
+    this.loadTransactionList()
     window.addEventListener('resize', this.updateWindowWidth)
   },
   beforeUnmount() {
@@ -94,14 +89,28 @@ export default {
     updateWindowWidth() {
       this.windowWidth = window.innerWidth
     },
-    formatCurrency(amount) {
-      return amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    formatCurrency,
+    formatDate,
+    async loadTransactionList() {
+      const transfersList = await listTransfers()
+      console.log('TransferList', transfersList)
+      this.transactions = transfersList
     }
   }
 }
 </script>
 
 <style scoped>
+.main-container {
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .transaction-container {
   max-width: 100%;
   margin: 0 auto;
@@ -116,6 +125,11 @@ export default {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
+}
+
+.transaction-table th {
+  background-color: var(--primary-color);
+  color: var(--vt-c-white);
 }
 
 .transaction-table th,
