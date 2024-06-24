@@ -1,35 +1,43 @@
-# go2win
+# teste-go2win-frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+## Descrição
 
-## Recommended IDE Setup
+Front end do teste go2win sistema de transação.
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## IDE
 
-## Customize configuration
+[VSCode](https://code.visualstudio.com/)
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+## Tecnologias Utilizadas
 
-## Project Setup
+- **Vue:** 3.4.29
+
+## Como Executar o Projeto
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### Compilando e Reload automatico para desenvolvimento
 
 ```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+### Compilando and Minificando para Produção
 
 ```sh
 npm run build
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+## Roadmap
 
-```sh
-npm run lint
-```
+- Adicionar testes unitarios com o Jest
+- Adicionar filtros para melhorar visibilidade da lista
+- Sistema de login e autenticação
+- Sistema de separação de transferencia por conta
+- CI/CD para deploy
+
+## Autores
+
+- [@PedroGomes15](https://github.com/PedroGomes15)
