@@ -34,6 +34,14 @@
   --color-text: var(--vt-c-text-light-1);
 
   --section-gap: 160px;
+
+  --primary-color: #7d1697;
+  --primary-color-hover: #520a64;
+  --secondary-color: #d8811e;
+  --secondary-color-hover: #af630d;
+  --error-color: #e74c3c;
+  --error-color-hover: #c0392b;
+  --primary-color-disabled: #7d169748;
 }
 
 @media (prefers-color-scheme: dark) {
